@@ -42,6 +42,11 @@ extern "C" {
 
 NPF_VISIBILITY int npf_verify_format(NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format);
 
+// The npf_ functions all return the number of bytes required to express the
+// fully-formatted string, not including the null terminator character.
+// The npf_ functions do not return negative values, since the lack of 'l' length
+// modifier support makes encoding errors impossible.
+
 NPF_VISIBILITY int npf_snprintf(
   NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *reference, const NPF_CHAR_TYPE *format, ...) NPF_PRINTF_ATTR(3, 4);
 

@@ -186,13 +186,14 @@ NPF_VISIBILITY int npf_vpprintf(
   #pragma warning(push)
   #pragma warning(disable:4514) // unreferenced inline function removed
   #pragma warning(disable:4505) // unreferenced function removed
-  #pragma warning(disable:4820) // padding after data member
-  #pragma warning(disable:5039) // extern "C" throw
-  #pragma warning(disable:5045) // spectre mitigation
   #pragma warning(disable:4701) // possibly uninitialized
   #pragma warning(disable:4706) // assignment in conditional
   #pragma warning(disable:4710) // not inlined
   #pragma warning(disable:4711) // selected for inline
+  #pragma warning(disable:4820) // padding after data member
+  #pragma warning(disable:5039) // extern "C" throw
+  #pragma warning(disable:5045) // spectre mitigation
+  #pragma warning(disable:5262) // implicit switch fall-through
 #endif
 
 #if (NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1) || \
@@ -1324,12 +1325,12 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
     switch (fs.conv_spec) {
       case NPF_FMT_SPEC_CONV_PERCENT:
         *cbuf = '%';
-        ++cbuf_len;
+        cbuf_len = 1;
         break;
 
       case NPF_FMT_SPEC_CONV_CHAR:
         *cbuf = (NPF_CHAR_TYPE)(arg_values[fs.order - 1].i);
-        ++cbuf_len;
+        cbuf_len = 1;
         break;
 
       case NPF_FMT_SPEC_CONV_STRING: {

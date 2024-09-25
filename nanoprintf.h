@@ -1363,8 +1363,9 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
         return 0;
       }
 #if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
-        int const n = (fs.prec_opt == NPF_FMT_SPEC_OPT_NONE) ? -1 : fs.prec;
-        for (char const *s = cbuf; *s && ((n == -1) || (cbuf_len < n)); ++s, ++cbuf_len);
+        for (char const *s = cbuf;
+             *s && ((fs.prec_opt == NPF_FMT_SPEC_OPT_NONE) || (cbuf_len < fs.prec));
+             ++s, ++cbuf_len);
 #else
         for (char const *s = cbuf; *s; ++s, ++cbuf_len); // strlen
 #endif

@@ -243,7 +243,7 @@ typedef enum {
 #endif
 } npf_format_spec_conversion_t;
 
-typedef struct {
+typedef struct npf_format_spec {
   int order;
   NPF_CHAR_TYPE prepend;          // ' ' or '+'
   NPF_CHAR_TYPE alt_form;         // '#'
@@ -273,7 +273,7 @@ typedef struct {
   typedef uintmax_t npf_uint_t;
 #endif
 
-typedef struct {
+typedef struct npf_bufputc_ctx {
   NPF_CHAR_TYPE *dst;
   size_t len;
   size_t cur;

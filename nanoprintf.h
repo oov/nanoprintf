@@ -1,4 +1,4 @@
-/* nanoprintf: a tiny embeddable printf replacement written in C.
+/* nanoprintf v0.5.0: a tiny embeddable printf replacement written in C.
    https://github.com/charlesnicholson/nanoprintf
    charles.nicholson+nanoprintf@gmail.com
    dual-licensed under 0bsd and unlicense, take your pick. see eof for details. */
@@ -304,19 +304,6 @@ typedef struct npf_bufputc_ctx {
   size_t cur;
 } npf_bufputc_ctx_t;
 
-static int npf_parse_format_spec(NPF_CHAR_TYPE const *format, npf_format_spec_t *out_spec);
-static void npf_bufputc(int c, void *ctx);
-static void npf_bufputc_nop(int c, void *ctx);
-NPF_NOINLINE static int npf_utoa_rev(npf_uint_t val, NPF_CHAR_TYPE *buf, uint_fast8_t base, char case_adj);
-
-#if NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS == 1
-static int npf_ftoa_rev(NPF_CHAR_TYPE *buf, npf_format_spec_t const *spec, double f);
-#endif
-
-#if NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS == 1
-static int npf_bin_len(npf_uint_t u);
-#endif
-
 #if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
   #ifdef _MSC_VER
     #include <BaseTsd.h>
@@ -521,10 +508,14 @@ static int npf_parse_format_spec(NPF_CHAR_TYPE const *format, npf_format_spec_t 
 
     case 'i':
     case 'd': tmp_conv = NPF_FMT_SPEC_CONV_SIGNED_INT;
-    case 'o': if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { tmp_conv = NPF_FMT_SPEC_CONV_OCTAL; }
-    case 'u': if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { tmp_conv = NPF_FMT_SPEC_CONV_UNSIGNED_INT; }
-    case 'X': if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { out_spec->case_adjust = 0; }
-    case 'x': if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { tmp_conv = NPF_FMT_SPEC_CONV_HEX_INT; }
+    case 'o':
+      if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { tmp_conv = NPF_FMT_SPEC_CONV_OCTAL; }
+    case 'u':
+      if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { tmp_conv = NPF_FMT_SPEC_CONV_UNSIGNED_INT; }
+    case 'X':
+      if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { out_spec->case_adjust = 0; }
+    case 'x':
+      if (tmp_conv == NPF_FMT_SPEC_CONV_NONE) { tmp_conv = NPF_FMT_SPEC_CONV_HEX_INT; }
       out_spec->conv_spec = (uint8_t)tmp_conv;
 #if (NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1) && \
     (NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1)
@@ -619,14 +610,14 @@ static int npf_utoa_rev(npf_uint_t val, NPF_CHAR_TYPE *buf, uint_fast8_t base, c
 
 // The floating point conversion code works with an unsigned integer type of any size.
 #ifndef NANOPRINTF_CONVERSION_FLOAT_TYPE
-  #define NANOPRINTF_CONVERSION_FLOAT_TYPE    unsigned int
+  #define NANOPRINTF_CONVERSION_FLOAT_TYPE unsigned int
 #endif
-typedef NANOPRINTF_CONVERSION_FLOAT_TYPE    npf_ftoa_man_t;
+typedef NANOPRINTF_CONVERSION_FLOAT_TYPE npf_ftoa_man_t;
 
 #if (NANOPRINTF_CONVERSION_BUFFER_SIZE <= UINT_FAST8_MAX) && (UINT_FAST8_MAX <= INT_MAX)
-  typedef uint_fast8_t    npf_ftoa_dec_t;
+  typedef uint_fast8_t npf_ftoa_dec_t;
 #else
-  typedef int    npf_ftoa_dec_t;
+  typedef int npf_ftoa_dec_t;
 #endif
 
 enum {
@@ -635,7 +626,8 @@ enum {
   NPF_DOUBLE_MAN_BITS = DBL_MANT_DIG - 1,
   NPF_DOUBLE_BIN_BITS = sizeof(npf_double_bin_t) * CHAR_BIT,
   NPF_FTOA_MAN_BITS   = sizeof(npf_ftoa_man_t) * CHAR_BIT,
-  NPF_FTOA_SHIFT_BITS = ((NPF_FTOA_MAN_BITS < DBL_MANT_DIG) ? NPF_FTOA_MAN_BITS : DBL_MANT_DIG) - 1
+  NPF_FTOA_SHIFT_BITS =
+    ((NPF_FTOA_MAN_BITS < DBL_MANT_DIG) ? NPF_FTOA_MAN_BITS : DBL_MANT_DIG) - 1
 };
 
 /* Generally floating-point conversion implementations use
@@ -649,14 +641,16 @@ enum {
 */
 static int npf_ftoa_rev(NPF_CHAR_TYPE *buf, npf_format_spec_t const *spec, double f) {
   NPF_CHAR_TYPE const *ret = NULL;
-  npf_double_bin_t bin; { // Union-cast is UB, let compiler optimize byte-copy loop.
+  npf_double_bin_t bin; { // Union-cast is UB pre-C11, compiler optimizes byte-copy loop.
     NPF_CHAR_TYPE const *src = (NPF_CHAR_TYPE const *)&f;
     NPF_CHAR_TYPE *dst = (NPF_CHAR_TYPE *)&bin;
     for (uint_fast8_t i = 0; i < sizeof(f); ++i) { dst[i] = src[i]; }
   }
 
-  // Unsigned to signed integer casting is UB, but it works for two's complement implementations.
-  npf_ftoa_exp_t exp = (npf_ftoa_exp_t)((npf_ftoa_exp_t)(bin >> NPF_DOUBLE_MAN_BITS) & NPF_DOUBLE_EXP_MASK);
+  // Unsigned -> signed int casting is IB and can raise a signal but generally doesn't.
+  npf_ftoa_exp_t exp =
+    (npf_ftoa_exp_t)((npf_ftoa_exp_t)(bin >> NPF_DOUBLE_MAN_BITS) & NPF_DOUBLE_EXP_MASK);
+
   bin &= ((npf_double_bin_t)0x1 << NPF_DOUBLE_MAN_BITS) - 1;
   if (exp == (npf_ftoa_exp_t)NPF_DOUBLE_EXP_MASK) { // special value
     ret = (bin) ? "NAN" : "FNI";
@@ -680,7 +674,8 @@ static int npf_ftoa_rev(NPF_CHAR_TYPE *buf, npf_format_spec_t const *spec, doubl
     npf_ftoa_man_t man_i;
 
     if (exp >= 0) {
-      int_fast8_t shift_i = (int_fast8_t)((exp > NPF_FTOA_SHIFT_BITS) ? (int)NPF_FTOA_SHIFT_BITS : exp);
+      int_fast8_t shift_i =
+        (int_fast8_t)((exp > NPF_FTOA_SHIFT_BITS) ? (int)NPF_FTOA_SHIFT_BITS : exp);
       npf_ftoa_exp_t exp_i = (npf_ftoa_exp_t)(exp - shift_i);
       shift_i = (int_fast8_t)(NPF_DOUBLE_MAN_BITS - shift_i);
       man_i = (npf_ftoa_man_t)(bin >> shift_i);
@@ -709,8 +704,7 @@ static int npf_ftoa_rev(NPF_CHAR_TYPE *buf, npf_format_spec_t const *spec, doubl
     }
     end = dec;
 
-    // Print the integer
-    do {
+    do { // Print the integer
       if (end >= NANOPRINTF_CONVERSION_BUFFER_SIZE) { goto exit; }
       buf[end++] = (char)('0' + (char)(man_i % 10));
       man_i /= 10;
@@ -724,14 +718,21 @@ static int npf_ftoa_rev(NPF_CHAR_TYPE *buf, npf_format_spec_t const *spec, doubl
     if (exp < NPF_DOUBLE_MAN_BITS) {
       int_fast8_t shift_f = (int_fast8_t)((exp < 0) ? -1 : exp);
       npf_ftoa_exp_t exp_f = (npf_ftoa_exp_t)(exp - shift_f);
-      npf_double_bin_t bin_f = bin << ((NPF_DOUBLE_BIN_BITS - NPF_DOUBLE_MAN_BITS) + shift_f);
+      npf_double_bin_t bin_f =
+        bin << ((NPF_DOUBLE_BIN_BITS - NPF_DOUBLE_MAN_BITS) + shift_f);
 
       // This if-else statement can be completely optimized at compile time.
       if (NPF_DOUBLE_BIN_BITS > NPF_FTOA_MAN_BITS) {
-        man_f = (npf_ftoa_man_t)(bin_f >> ((unsigned)(NPF_DOUBLE_BIN_BITS - NPF_FTOA_MAN_BITS) % NPF_DOUBLE_BIN_BITS));
-        carry = (uint_fast8_t)((bin_f >> ((unsigned)(NPF_DOUBLE_BIN_BITS - NPF_FTOA_MAN_BITS - 1) % NPF_DOUBLE_BIN_BITS)) & 0x1);
+        man_f = (npf_ftoa_man_t)(bin_f >> ((unsigned)(NPF_DOUBLE_BIN_BITS -
+                                                      NPF_FTOA_MAN_BITS) %
+                                           NPF_DOUBLE_BIN_BITS));
+        carry = (uint_fast8_t)((bin_f >> ((unsigned)(NPF_DOUBLE_BIN_BITS -
+                                                     NPF_FTOA_MAN_BITS - 1) %
+                                          NPF_DOUBLE_BIN_BITS)) & 0x1);
       } else {
-        man_f = (npf_ftoa_man_t)((npf_ftoa_man_t)bin_f << ((unsigned)(NPF_FTOA_MAN_BITS - NPF_DOUBLE_BIN_BITS) % NPF_FTOA_MAN_BITS));
+        man_f = (npf_ftoa_man_t)((npf_ftoa_man_t)bin_f
+                                 << ((unsigned)(NPF_FTOA_MAN_BITS -
+                                                NPF_DOUBLE_BIN_BITS) % NPF_FTOA_MAN_BITS));
         carry = 0;
       }
 
@@ -1514,7 +1515,8 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
       } break;
 
       case NPF_FMT_SPEC_CONV_POINTER: {
-        cbuf_len = npf_utoa_rev((npf_uint_t)(uintptr_t)(arg_values[fs.order - 1].ptr), cbuf, 16, 'a' - 'A');
+        cbuf_len =
+          npf_utoa_rev((npf_uint_t)(uintptr_t)(arg_values[fs.order - 1].ptr), cbuf, 16, 'a' - 'A');
         need_0x = 'x';
       } break;
 

@@ -130,11 +130,6 @@ NPF_VISIBILITY int npf_vpprintf(
   #error Precision format specifiers must be enabled if float support is enabled.
 #endif
 
-#if defined(NANOPRINTF_SNPRINTF_SAFE_EMPTY_STRING_ON_OVERFLOW) && \
-    defined(NANOPRINTF_SNPRINTF_SAFE_TRIM_STRING_ON_OVERFLOW)
-  #error snprintf safety flags are mutually exclusive.
-#endif
-
 // intmax_t / uintmax_t require stdint from c99 / c++11
 #if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
   #ifndef _MSC_VER
@@ -1670,11 +1665,13 @@ int npf_vsnprintf(NPF_CHAR_TYPE *buffer, size_t bufsz,  NPF_CHAR_TYPE const *ref
   int const n = npf_vpprintf(pc, &bufputc_ctx, reference, format, vlist);
   pc('\0', &bufputc_ctx);
 
+  if (buffer && bufsz) {
 #ifdef NANOPRINTF_SNPRINTF_SAFE_EMPTY_STRING_ON_OVERFLOW
-  if (bufsz && (n >= (int)bufsz)) { buffer[0] = '\0'; }
-#elif defined(NANOPRINTF_SNPRINTF_SAFE_TRIM_STRING_ON_OVERFLOW)
-  if (bufsz && (n >= (int)bufsz)) { buffer[bufsz - 1] = '\0'; }
+    if (n >= (int)bufsz) { buffer[0] = '\0'; }
+#else
+    buffer[bufsz - 1] = '\0';
 #endif
+  }
 
   return n;
 }

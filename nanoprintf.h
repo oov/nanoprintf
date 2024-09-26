@@ -860,7 +860,7 @@ union npf_arg_value {
 #if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
   long long *llp;
   intmax_t *imxp;
-  ssize_t *ssz;
+  npf_ssize_t *ssz;
   ptrdiff_t *ptrdiffp;
 #endif
 #endif
@@ -900,7 +900,7 @@ static size_t npf_arg_sizeof(enum npf_format_spec_conversion const conv_spec,
     case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
       return sizeof(intmax_t);
     case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-      return sizeof(ssize_t);
+      return sizeof(npf_ssize_t);
     case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
       return sizeof(ptrdiff_t);
 #endif
@@ -954,7 +954,7 @@ static size_t npf_arg_sizeof(enum npf_format_spec_conversion const conv_spec,
     case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
       return sizeof(intmax_t *);
     case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-      return sizeof(ssize_t *);
+      return sizeof(npf_ssize_t *);
     case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
       return sizeof(ptrdiff_t *);
 #endif
@@ -994,7 +994,7 @@ static int npf_is_int(struct npf_arg_type *a) {
   case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
     return sizeof(int) <= sizeof(intmax_t);
   case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-    return sizeof(int) <= sizeof(ssize_t);
+    return sizeof(int) <= sizeof(npf_ssize_t);
   case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
     return sizeof(int) <= sizeof(ptrdiff_t);
 #endif
@@ -1123,7 +1123,7 @@ static int npf_verify_and_assign_values(int const args_max,
         values[idx].imx = va_arg(args, intmax_t);
         continue;
       case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-        values[idx].ssz = va_arg(args, ssize_t);
+        values[idx].ssz = va_arg(args, npf_ssize_t);
         continue;
       case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
         values[idx].ptrdiff = va_arg(args, ptrdiff_t);
@@ -1192,7 +1192,7 @@ static int npf_verify_and_assign_values(int const args_max,
         values[idx].imxp = va_arg(args, intmax_t *);
         continue;
       case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-        values[idx].sszp = va_arg(args, ssize_t *);
+        values[idx].sszp = va_arg(args, npf_ssize_t *);
         continue;
       case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
         values[idx].ptrdiffp = va_arg(args, ptrdiff_t *);

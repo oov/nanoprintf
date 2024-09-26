@@ -233,7 +233,7 @@ enum {
 };
 #endif
 
-enum npf_format_spec_length_modifier_t {
+enum npf_format_spec_length_modifier {
   NPF_FMT_SPEC_LEN_MOD_NONE,
   NPF_FMT_SPEC_LEN_MOD_SHORT,       // 'h'
   NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE, // 'L'
@@ -247,7 +247,7 @@ enum npf_format_spec_length_modifier_t {
 #endif
 };
 
-enum npf_format_spec_conversion_t {
+enum npf_format_spec_conversion {
   NPF_FMT_SPEC_CONV_NONE,
   NPF_FMT_SPEC_CONV_PERCENT,      // '%'
   NPF_FMT_SPEC_CONV_CHAR,         // 'c'
@@ -830,8 +830,8 @@ static int npf_bin_len(npf_uint_t u) {
 #endif
 
 struct npf_arg_type {
-  enum npf_format_spec_conversion_t conv_spec;
-  enum npf_format_spec_length_modifier_t length_modifier;
+  enum npf_format_spec_conversion conv_spec;
+  enum npf_format_spec_length_modifier length_modifier;
 };
 
 union npf_arg_value {
@@ -870,8 +870,8 @@ union npf_arg_value {
 #endif
 };
 
-static size_t npf_arg_sizeof(enum npf_format_spec_conversion_t const conv_spec,
-                             enum npf_format_spec_length_modifier_t const length_modifier) {
+static size_t npf_arg_sizeof(enum npf_format_spec_conversion const conv_spec,
+                             enum npf_format_spec_length_modifier const length_modifier) {
   switch ((int)conv_spec) {
   case NPF_FMT_SPEC_CONV_PERCENT:
     return 0;

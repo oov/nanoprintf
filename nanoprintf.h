@@ -189,7 +189,9 @@ NPF_VISIBILITY int npf_vpprintf(
     #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
     #ifndef __APPLE__
-      #pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
+      #if __has_warning("-Wunsafe-buffer-usage")
+        #pragma GCC diagnostic ignored "-Wunsafe-buffer-usage"
+      #endif
     #endif
   #elif NANOPRINTF_GCC_PAST_4_6
     #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"

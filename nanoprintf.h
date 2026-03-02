@@ -1019,7 +1019,7 @@ static int npf_format_to_npf_arg_type(NPF_CHAR_TYPE const *const format,
       continue;
     }
     cur += fs_len;
-    if (fs.conv_spec == NPF_FMT_SPEC_CONV_NONE) {
+    if (fs.conv_spec == NPF_FMT_SPEC_CONV_NONE || fs.conv_spec == NPF_FMT_SPEC_CONV_PERCENT) {
       continue;
     }
 #if (NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1) && (NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1)
@@ -1092,7 +1092,7 @@ static int npf_verify_and_assign_values(int const args_max,
     case NPF_FMT_SPEC_CONV_NONE:
       return 0;
     case NPF_FMT_SPEC_CONV_PERCENT:
-      return 0;
+      continue;
     case NPF_FMT_SPEC_CONV_CHAR:
       values[idx].i = va_arg(args, int);
       continue;
